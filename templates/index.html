@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tuhin's AI Chatbot</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class'
+        };
+    </script>
+    <script>
+        function toggleTheme() {
+            document.documentElement.classList.toggle('dark');
+            localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (localStorage.getItem('theme') === 'dark') {
+                document.documentElement.classList.add('dark');
+            }
+        });
+
+        async function uploadImage(event) {
+            event.preventDefault();
+            let formData = new FormData(document.getElementById("image-form"));
+            let response = await fetch("/upload", { method: "POST", body: formData });
+            let result = await response.json();
+            document.getElementById("image-response").innerText = result.response || "Error processing image.";
+        }
+
+        async function sendMessage(event) {
+            event.preventDefault();
+            let message = document.getElementById("chat-input").value;
+            if (!message.trim()) return;
+            
+            let response = await fetch("/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message })
+            });
+            
+            let result = await response.json();
+            let chatBox = document.getElementById("chat-box");
+            chatBox.innerHTML += `<p class='text-right'><strong>You:</strong> ${message}</p>`;
+            chatBox.innerHTML += `<p class='text-left text-blue-500'><strong>Gemini:</strong> ${result.response || "No response."}</p>`;
+            document.getElementById("chat-input").value = "";
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+    </script>
+</head>
+<body class="bg-gray-900 text-white flex justify-center items-center min-h-screen p-4 transition-colors duration-300 dark:bg-white dark:text-black">
+    <div class="w-full  bg-gray-800 p-6 rounded-lg shadow-lg dark:bg-gray-200">
+        <div class="flex justify-between items-center mb-4">
+            <h1 class="text-2xl font-bold text-center">Tuhin's Chatbot (using gemini api )</h1>
+            <button onclick="toggleTheme()" class="bg-gray-600 hover:bg-gray-700 text-white dark:bg-gray-300 dark:text-black px-4 py-2 rounded">Toggle Mode</button>
+        </div>
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div>
+        <h2 class="text-lg font-semibold mb-2">Image Analysis</h2>
+        <form id="image-form" onsubmit="uploadImage(event)" class="flex flex-col space-y-2">
+            <input type="file" name="file" required class="file:bg-blue-500 file:border-none file:text-white file:px-4 file:py-2 file:rounded cursor-pointer">
+            <input type="text" name='text' id="chat-input" placeholder="Type a message..." required class="flex-grow p-2 rounded-l bg-gray-600 text-white border border-gray-500 focus:outline-none dark:bg-gray-100 dark:text-black dark:border-gray-400">
+            <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">Upload Image</button>
+        </form>
+        <p id="image-response" class="mt-2 dark:text-purple-900 gray-900"></p>
+        </div>
+        <div>
+        <h2 class="text-lg font-semibold mt-6 mb-2">Chat with Ai</h2>
+        <div id="chat-box" class="border border-gray-600 p-4 h-48 overflow-y-auto bg-gray-700 rounded dark:bg-gray-300 dark:border-gray-400 dark:text-black"></div>
+        <form id="chat-form" onsubmit="sendMessage(event)" class="mt-2 flex">
+            <input type="text" id="chat-input" placeholder="Type a message..." required class="flex-grow p-2 rounded-l bg-gray-600 text-white border border-gray-500 focus:outline-none dark:bg-gray-100 dark:text-black dark:border-gray-400">
+            <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-4 rounded-r">Send</button>
+        </form>
+        </div>
+    </div>
+    </div>
+</body>
+</html>
